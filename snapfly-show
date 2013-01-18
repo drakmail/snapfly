@@ -1,0 +1,2 @@
+#!/bin/sh
+dbus-send --session --type=method_call --dest=ru.agilialinux.openbox /snapfly ru.agilialinux.openbox.toggle

@@ -1,0 +1,18 @@
+Source: snapfly
+Section: x11
+Priority: extra
+Maintainer: Platon Peacelove <platonny@ngs.ru>
+Build-Depends: debhelper (>= 7.0.50~)
+Standards-Version: 3.8.4
+Homepage: http://code.google.com/p/snapfly/
+#Vcs-Git: git://git.debian.org/collab-maint/snapfly.git
+#Vcs-Browser: http://git.debian.org/?p=collab-maint/snapfly.git;a=summary
+
+Package: snapfly
+Architecture: any
+Depends: python, python-dbus, python-gtk2
+Suggests: python-pyinotify
+Description: SnapFly is a lightweight PyGTK menu
+ SnapFly is a lightweight PyGTK menu which can be run as a daemon 
+ (in this case you can call the menu from any place on your desktop using snapfly-show) 
+ or as a standalone menu with a systray icon.

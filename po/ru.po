@@ -1,0 +1,72 @@
+# SnapFly Menu
+# Copyright (C) 2011
+# This file is distributed under the same license as the SnapFly package.
+# Drakmail <drakmail@gmail.com>, NomerUNO <uno.kms@gmail.com> 2011.
+#
+#"Project-Id-Version: 0.8\n"
+#"Report-Msgid-Bugs-To: drakmail@gmail.com\n"
+#"POT-Creation-Date: 2011-01-05 11:10+0300\n"
+#"PO-Revision-Date: 2011-02-23 19:54+0300\n"
+#"MIME-Version: 1.0\n"
+#"Content-Type: text/plain; charset=CHARSET\n"
+
+#: snapfly_core.py:25 snapfly_core.py:37
+msgid "Accessories"
+msgstr "Инструменты"
+
+#: snapfly_core.py:26 snapfly_core.py:38
+msgid "Games"
+msgstr "Игры"
+
+#: snapfly_core.py:27 snapfly_core.py:39
+msgid "Graphics"
+msgstr "Графика"
+
+#: snapfly_core.py:28 snapfly_core.py:40
+msgid "Network"
+msgstr "Сеть"
+
+#: snapfly_core.py:29 snapfly_core.py:41
+msgid "Office"
+msgstr "Офис"
+
+#: snapfly_core.py:30 snapfly_core.py:42
+msgid "Other"
+msgstr "Разное"
+
+#: snapfly_core.py:31 snapfly_core.py:43
+msgid "Development"
+msgstr "Разработка"
+
+#: snapfly_core.py:32 snapfly_core.py:44
+msgid "Settings"
+msgstr "Настройки"
+
+#: snapfly_core.py:33 snapfly_core.py:45
+msgid "Multimedia"
+msgstr "Аудио и видео"
+
+#: snapfly_core.py:34 snapfly_core.py:46
+msgid "System"
+msgstr "Системные"
+
+#: Categories
+msgid "Favorites"
+msgstr "Избранное"
+
+#: snapfly:140
+msgid "Lightweight, DE-independent PyGTK menu"
+msgstr "Легковесное, независимое от окружения рабочего стола меню, написанное с помощью PyGTK"
+
+#: snapfly_core.py:342
+msgid "Terminal"
+msgstr "Эмулятор терминала"
+
+#: snapfly_core.py:345
+msgid "Web Browser"
+msgstr "Веб браузер"
+
+#: snapfly_core.py:347
+msgid "Mail Composer"
+msgstr "Написать Email"
+

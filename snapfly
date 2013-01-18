@@ -1,0 +1,202 @@
+#!/usr/bin/python
+# -*- coding: utf-8 -*-
+
+# Copyright (C) 2010-2011
+#   Drakmail < drakmail@gmail.com >
+#   NomerUNO < uno.kms@gmail.com >
+#   Platon Peacel☮ve <platonny@ngs.ru>
+#   Elec.Lomy.RU <Elec.Lomy.RU@gmail.com>
+#   ADcomp <david.madbox@gmail.com>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+
+import os, sys
+import gobject, dbus, dbus.service
+import gettext
+
+
+try:
+    if os.path.isdir(os.path.join(".", "src")) and os.path.isfile(
+            os.path.join(".", "setup.py")):
+        import src
+        sys.modules['snapfly'] = src
+    from snapfly import launcher
+    from snapfly import snapfly_core
+    from snapfly import gui
+    from snapfly.menu import Menu
+    from snapfly.version import Application
+    from snapfly.xdg import CONFIG_PATH, CONFIG_FILE, USERMENU
+except ImportError:
+    sys.stderr.write("Can't import snapfly_core module.\nExiting\n")
+    import traceback
+    traceback.print_exc(sys.stderr)
+    sys.exit(1)
+
+def tryUpdate():
+    global g_menu
+    if not g_menu.updating:
+        g_menu.update_menu()
+        return False
+    else:
+        return True
+# Handle show signal through DBus
+class DbusHandler(dbus.service.Object):
+    def __init__(self):
+        bus_name = dbus.service.BusName('ru.agilialinux.openbox', bus=dbus.SessionBus())
+        dbus.service.Object.__init__(self, bus_name, '/' + Application.name)
+
+    @dbus.service.method('ru.agilialinux.openbox')
+    def toggle(self):
+        global g_menu
+        g_menu.callback_signal()
+        return "Ok"
+
+    @dbus.service.method('ru.agilialinux.openbox',in_signature='i')
+    def show(self,category):
+        global g_menu
+        g_menu.callback_signal_show(category)
+        return "Ok"
+
+def checkConfigs():
+    if not os.path.exists(CONFIG_PATH):
+        os.makedirs(CONFIG_PATH)
+
+    if not os.path.exists(CONFIG_FILE):
+        print("Writing default config...")
+        default_config_file = """# Sets terminal emulator for 'Run in terminal' programms
+# terminal=x-terminal-emulator
+# Show icon in systray
+# systray=true
+# Set rounded corners. You can set it value to 0 for much more faster drawing
+# rounded=4
+# Width of menu
+# menu_width=430
+# Background color
+# bg_color=#DCDCDC
+# Borders color
+# border_color=#4D4D4D
+# Hide GNOME or KDE or LXDE or ROX or XFCE or Old items from menu. Default: None
+# hide_list=GNOME,KDE,Old
+# Use click to category change (If false mouse move action will be used for category change)
+# category_click=true
+# Show Favorites category (allow to launch system default browser and email client now, if defined)
+# favorites=false
+# Directories to search .desktop files (You can use '~' for home directory).
+# desktop_dirs=/usr/share/applications/,~/.local/share/applications/,/usr/local/share/applications/,/usr/share/applications/kde4/,/usr/local/share/applications/kde4/
+"""
+        open(CONFIG_FILE, 'w').write(default_config_file)
+
+    if not os.path.exists(USERMENU):
+        print "Writing default usermenu..."
+        default_usermenu = """# Usermenu config file format:
+# @CategoryName##/path/to/category/image.png
+# /path/to/command/in/CategoryName##/path/to/item/image.png##Item text##Description of Item
+# /path/to/command2/in/CategoryName##/path/to/item/image2.png##Item2 text##Description of Item2"""
+
+        open(USERMENU, "w").write(default_usermenu)
+
+def run():
+    try:
+        global g_menu
+
+        checkConfigs()
+
+        ## need to change directory
+        SRC_PATH = os.path.dirname(os.path.realpath(__file__))
+        os.chdir(SRC_PATH)
+
+        g_menu = Menu(notifier,INOTIFY_SUPPORT)
+        # change directory to Home
+        os.chdir(os.getenv('HOME'))
+        DBusGMainLoop(set_as_default=True)
+        DbusHandler()
+        gobject.timeout_add( 1000, launcher.check_programs )
+        g_menu.run()
+    except:
+        print("Error Occurred. Exiting")
+        import traceback
+        traceback.print_exc(sys.stderr)
+
+    if INOTIFY_SUPPORT:
+        notifier.stop()
+    launcher.stop()
+
+if __name__ == "__main__":
+    realpath = os.path.dirname(os.path.realpath(__file__))
+    os.chdir(realpath)
+
+    if len(sys.argv) >= 2:
+        if sys.argv[1] == '-v':
+            print("%s v%s" % (Application.name_full, Application.version))
+            sys.exit(0)
+        elif sys.argv[1] == '-c':
+            CONFIG_FILE = sys.argv[2]
+        else:
+            print("""Unknown option ..
+Usage : snapfly [-c|-v]
+-v          : print version
+-c CONFIG   : use alternate config file""")
+            sys.exit(1)
+
+    #initializing gettext
+    locale_dir, bindir = os.path.split(os.path.abspath(os.path.dirname(sys.argv[0])))
+    if bindir == 'bin':
+        locale_dir = os.path.join(locale_dir, 'share/locale')
+    else:
+        locale_dir = '/usr/share/locale'
+    gettext.bindtextdomain(Application.name, locale_dir)
+    gettext.textdomain(Application.name)
+    _ = gettext.gettext
+    del locale_dir, bindir
+
+    gobject.threads_init()
+
+    try:
+        import pyinotify
+
+        INOTIFY_SUPPORT = True
+    except:
+        INOTIFY_SUPPORT = False
+        print("Warning: iNotify updates does not support by your system.")
+
+    if INOTIFY_SUPPORT:
+        class EventHandler(pyinotify.ProcessEvent):
+            def process_IN_CREATE(self, event):
+                gobject.timeout_add(1000,tryUpdate)
+
+            def process_IN_DELETE(self, event):
+                gobject.timeout_add(1000,tryUpdate)
+
+            def process_IN_MODIFY(self, event):
+                gobject.timeout_add(1000,tryUpdate)
+
+    from dbus.mainloop.glib import DBusGMainLoop
+
+    if INOTIFY_SUPPORT:
+        WM = pyinotify.WatchManager()  # Watch Manager
+        mask = pyinotify.IN_DELETE | pyinotify.IN_CREATE | pyinotify.IN_MODIFY  # watched events
+        handler = EventHandler()
+        notifier = pyinotify.ThreadedNotifier(WM, handler)
+        if os.path.exists('/usr/share/applications'):
+            WM.add_watch('/usr/share/applications', mask, rec=True)
+        if os.path.exists("%s/.local/share/applications" % os.getenv('HOME')):
+            WM.add_watch("%s/.local/share/applications" % os.getenv('HOME'), mask, rec=True)
+        if os.path.isdir( os.path.join(CONFIG_PATH) ):
+            WM.add_watch( os.path.join(CONFIG_PATH), mask, rec=True)
+        notifier.start()
+    else:
+        notifier = None # else NameError at run()
+    launcher.start()
+    run()
