@@ -12,10 +12,21 @@ if test -x $TARBZ2; then
 	sudo rm $TARBZ2
 fi
 echo -n "creating $TARBZ2 "
-svn export .. $SOURCE_DIR > /dev/null
-tar -cjf $TARBZ2 $SOURCE_DIR
+
+# Get the source for the build from git
+# Note that git archive doesn't work with relative paths and does something
+# odd with shell expansion - so we move up to the base dir to run the cmd
+cd ..
+git archive master | bzip2 > $TARBZ2
+cp $TARBZ2 package/
+cd package
 echo -n "."
 echo "done"
+
+# Create the source build dir
+mkdir $SOURCE_DIR
+tar -xvf $TARBZ2 -C $SOURCE_DIR
+
 echo -n "creating debian package "
 ln -s $TARBZ2 $ORIGTBZ
 cd $SOURCE_DIR
